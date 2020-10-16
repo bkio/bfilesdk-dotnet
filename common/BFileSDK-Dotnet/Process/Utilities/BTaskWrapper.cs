@@ -81,7 +81,7 @@ namespace ServiceUtilities.Process
             }
         }
 
-        public static void Run(Action _Action, CancellationTokenSource _CancellationTokenSource = null)
+        public static void Run(System.Action _Action, CancellationTokenSource _CancellationTokenSource = null)
         {
             if (_Action != null)
             {
