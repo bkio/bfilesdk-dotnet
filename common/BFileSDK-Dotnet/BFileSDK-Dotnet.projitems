@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>f286b3e7-daab-468c-8399-93d3a8f26394</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>BFileSDK-Dotnet</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Geometry\Color.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Geometry\LOD.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Geometry\Vector2D.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Geometry\Vector3D.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Geometry\VertexNormalTangent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Procedure\Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\RandomAccessFile\FileHeader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\RandomAccessFile\GeometryNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\RandomAccessFile\HierarchyNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\RandomAccessFile\MetadataNode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\RandomAccessFile\Node.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\RandomAccessFile\XStreamReader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\RandomAccessFile\XStreamUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\RandomAccessFile\XStreamWriter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\BTaskWrapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Convert.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Parsers\ObjParser\Extent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Parsers\ObjParser\Mtl.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Parsers\ObjParser\Obj.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Parsers\ObjParser\Types\Color.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Parsers\ObjParser\Types\Face.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Parsers\ObjParser\Types\IType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Parsers\ObjParser\Types\Material.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Parsers\ObjParser\Types\TextureVertex.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Parsers\ObjParser\Types\Vertex.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Process\Utilities\Parsers\ObjParser\Types\VertexNormal.cs" />
+  </ItemGroup>
+</Project>

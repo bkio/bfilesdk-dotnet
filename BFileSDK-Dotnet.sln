@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30320.27
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BFileSDK-Test", "common\BFileSDK-Test\BFileSDK-Test.csproj", "{F5B4FB61-0933-4B87-879D-8D9A5615D72B}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BFileSDK-Dotnet", "common\BFileSDK-Dotnet\BFileSDK-Dotnet.shproj", "{F286B3E7-DAAB-468C-8399-93D3A8F26394}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{062C42C2-D791-4F9C-95CE-F4F7343F151E}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		common\BFileSDK-Dotnet\BFileSDK-Dotnet.projitems*{f286b3e7-daab-468c-8399-93d3a8f26394}*SharedItemsImports = 13
+		common\BFileSDK-Dotnet\BFileSDK-Dotnet.projitems*{f5b4fb61-0933-4b87-879d-8d9a5615d72b}*SharedItemsImports = 5
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F5B4FB61-0933-4B87-879D-8D9A5615D72B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5B4FB61-0933-4B87-879D-8D9A5615D72B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5B4FB61-0933-4B87-879D-8D9A5615D72B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5B4FB61-0933-4B87-879D-8D9A5615D72B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F5B4FB61-0933-4B87-879D-8D9A5615D72B} = {062C42C2-D791-4F9C-95CE-F4F7343F151E}
+		{F286B3E7-DAAB-468C-8399-93D3A8F26394} = {062C42C2-D791-4F9C-95CE-F4F7343F151E}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A77C9061-8FF7-4430-B3E9-D5776B19966E}
+	EndGlobalSection
+EndGlobal
