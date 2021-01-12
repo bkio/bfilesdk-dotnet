@@ -72,7 +72,7 @@ namespace ServiceUtilities.Process
                         }
                         catch (Exception) { }
 
-                        if (!bCheckSucceed)
+                        if (!bCheckSucceed && CreatedTasks.Count > i+1)
                         {
                             CreatedTasks.RemoveAt(i);
                         }

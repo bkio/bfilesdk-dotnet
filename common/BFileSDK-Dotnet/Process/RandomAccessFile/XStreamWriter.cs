@@ -156,6 +156,9 @@ namespace ServiceUtilities.Process.RandomAccessFile
             {
                 WaitFor.WaitOne();
                 WaitFor.Close();
+                FileTypeStreamMap[ENodeType.Hierarchy].IOStream.Flush();
+                FileTypeStreamMap[ENodeType.Metadata].IOStream.Flush();
+                FileTypeStreamMap[ENodeType.Geometry].IOStream.Flush();
             }
             catch (Exception) { }
 
@@ -175,7 +178,6 @@ namespace ServiceUtilities.Process.RandomAccessFile
             else if (_Stream.IOCompression == EDeflateCompression.DoNotCompress)
             {
                 WriteToStream_Base(_Stream.IOStream, _Nodes);
-                _Stream.IOStream.Flush();
             }
         }
 
