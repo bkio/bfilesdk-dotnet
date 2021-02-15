@@ -125,7 +125,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
         private Thread ProcessThread;
 
         private readonly ConcurrentQueue<byte[]> UnprocessedDataQueue = new ConcurrentQueue<byte[]>();
-        private int UnprocessedDataSize = 0;
+        private long UnprocessedDataSize = 0;
 
         private bool bInnerStreamReadCompleted = false;
         private readonly ManualResetEvent ThreadOperationCompletedEvent = new ManualResetEvent(false);
@@ -136,10 +136,17 @@ namespace ServiceUtilities.Process.RandomAccessFile
             {
                 if ((WaitingDataBlockQueue_Header_TotalSize + _Count) >= FileHeader.HeaderSize)
                 {
-                    var CurrentBlock = new byte[WaitingDataBlockQueue_Header_TotalSize > 0 ? (WaitingDataBlockQueue_Header_TotalSize + _Count) : _Count];
+                    long ArraySize = WaitingDataBlockQueue_Header_TotalSize > 0 ? (WaitingDataBlockQueue_Header_TotalSize + _Count) : _Count;
+                    if(ArraySize > 2147483591)
+                    {
+                        ArraySize = 2147483591;
+                    }
 
-                    int CurrentIx = 0;
-                    while (WaitingDataBlockQueue_Header.TryDequeue(out byte[] WaitingBlock))
+                    var CurrentBlock = new byte[ArraySize];
+
+
+                    long CurrentIx = 0;
+                    while (CurrentIx + MaximumChunkSize < ArraySize && WaitingDataBlockQueue_Header.TryDequeue(out byte[] WaitingBlock))
                     {
                         for (int i = 0; i < WaitingBlock.Length; i++)
                         {
@@ -217,7 +224,15 @@ namespace ServiceUtilities.Process.RandomAccessFile
                 var UnprocessedDataSize_Current = UnprocessedDataSize;
                 if (UnprocessedDataSize_Current > 0)
                 {
-                    var CurrentBuffer = new byte[(FailedLeftOverBlock != null ? FailedLeftOverBlock.Length : 0) + UnprocessedDataSize_Current];
+                    long ArraySize = (FailedLeftOverBlock != null ? FailedLeftOverBlock.Length : 0) + UnprocessedDataSize_Current;
+
+                    if (ArraySize > 2147483591)
+                    {
+                        ArraySize = 2147483591;
+                    }
+
+                    var CurrentBuffer = new byte[ArraySize];
+
                     if (FailedLeftOverBlock != null)
                     {
                         Buffer.BlockCopy(FailedLeftOverBlock, 0, CurrentBuffer, 0, FailedLeftOverBlock.Length);
