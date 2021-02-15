@@ -32,9 +32,9 @@ namespace ServiceUtilities.Process.RandomAccessFile
             {
                 lock (HierarchySort_Lock)
                 {
-                    var HierarchyNodeSize = (ulong)_Node.GetSize();
-                    _Node.UniqueID = HierarchyCurrentGlobalIndex << 32 | HierarchyNodeSize;
-                    HierarchyCurrentGlobalIndex += HierarchyNodeSize;
+                    //var HierarchyNodeSize = (ulong)_Node.GetSize();
+                    //_Node.UniqueID = HierarchyCurrentGlobalIndex << 32 | HierarchyNodeSize;
+                    //HierarchyCurrentGlobalIndex += HierarchyNodeSize;
                     HierarchySortedQueue.Enqueue(_Node);
                 }
             }
@@ -42,9 +42,9 @@ namespace ServiceUtilities.Process.RandomAccessFile
             {
                 lock (GeometrySort_Lock)
                 {
-                    var GeometryNodeSize = (ulong)_Node.GetSize();
-                    _Node.UniqueID = GeometryCurrentGlobalIndex << 32 | GeometryNodeSize;
-                    GeometryCurrentGlobalIndex += GeometryNodeSize;
+                    //var GeometryNodeSize = (ulong)_Node.GetSize();
+                    //_Node.UniqueID = GeometryCurrentGlobalIndex << 32 | GeometryNodeSize;
+                    //GeometryCurrentGlobalIndex += GeometryNodeSize;
                     GeometrySortedQueue.Enqueue(_Node);
                 }
             }
@@ -52,9 +52,9 @@ namespace ServiceUtilities.Process.RandomAccessFile
             {
                 lock (MetadataSort_Lock)
                 {
-                    var MetadataNodeSize = (ulong)_Node.GetSize();
-                    _Node.UniqueID = MetadataCurrentGlobalIndex << 32 | MetadataNodeSize;
-                    MetadataCurrentGlobalIndex += MetadataNodeSize;
+                    //var MetadataNodeSize = (ulong)_Node.GetSize();
+                    //_Node.UniqueID = MetadataCurrentGlobalIndex << 32 | MetadataNodeSize;
+                    //MetadataCurrentGlobalIndex += MetadataNodeSize;
                     MetadataSortedQueue.Enqueue(_Node);
                 }
             }
