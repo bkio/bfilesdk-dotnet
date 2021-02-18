@@ -19,7 +19,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
         private readonly GZipStream DecompressionStream;
         private readonly Stream InnerStream;
 
-        public const int MaximumChunkSize = 8192;
+        public const int MaximumChunkSize = 100000;
 
         public XStreamReader(ENodeType _FileType, Stream _InnerStream, Action<uint> _OnFileSDKVersionRead, Action<Node> _OnNodeRead_TS, EDeflateCompression _Compression)
         {
@@ -119,7 +119,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
         
         private bool bHeaderRead = false;
 
-        private int WaitingDataBlockQueue_Header_TotalSize = 0;
+        private long WaitingDataBlockQueue_Header_TotalSize = 0;
         private readonly Queue<byte[]> WaitingDataBlockQueue_Header = new Queue<byte[]>();
 
         private Thread ProcessThread;
@@ -146,8 +146,10 @@ namespace ServiceUtilities.Process.RandomAccessFile
 
 
                     long CurrentIx = 0;
-                    while (CurrentIx + MaximumChunkSize < ArraySize && WaitingDataBlockQueue_Header.TryDequeue(out byte[] WaitingBlock))
+                    while (WaitingDataBlockQueue_Header.TryPeek(out byte[] WaitingBlock) && CurrentIx + WaitingBlock.Length < ArraySize)
                     {
+                        WaitingDataBlockQueue_Header.TryDequeue(out byte[] _);
+
                         for (int i = 0; i < WaitingBlock.Length; i++)
                         {
                             CurrentBlock[CurrentIx++] = WaitingBlock[i];
@@ -219,7 +221,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
 
             while (true)
             {
-                int ProcessedBufferCount = 0;
+                long ProcessedBufferCount = 0;
 
                 var UnprocessedDataSize_Current = UnprocessedDataSize;
                 if (UnprocessedDataSize_Current > 0)
@@ -228,7 +230,15 @@ namespace ServiceUtilities.Process.RandomAccessFile
 
                     if (ArraySize > 2147483591)
                     {
-                        ArraySize = 2147483591;
+                        if(FailedLeftOverBlock == null)
+                        {
+                            ArraySize = 2147483591 - (2147483591 % MaximumChunkSize);
+                        }
+                        else
+                        {
+
+                            ArraySize = 2147483591 - ((2147483591 - FailedLeftOverBlock.Length) % MaximumChunkSize);
+                        }
                     }
 
                     var CurrentBuffer = new byte[ArraySize];
@@ -240,7 +250,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
                     int CurrentIndex = FailedLeftOverBlock != null ? FailedLeftOverBlock.Length : 0;
                     FailedLeftOverBlock = null;
 
-                    while (UnprocessedDataQueue.TryPeek(out byte[] CurrentBlock) && CurrentIndex < CurrentBuffer.Length)
+                    while (UnprocessedDataQueue.TryPeek(out byte[] CurrentBlock) && CurrentIndex < CurrentBuffer.Length && CurrentIndex + CurrentBlock.Length <= CurrentBuffer.Length)
                     {
                         Buffer.BlockCopy(CurrentBlock, 0, CurrentBuffer, CurrentIndex, CurrentBlock.Length);
                         CurrentIndex += CurrentBlock.Length;
