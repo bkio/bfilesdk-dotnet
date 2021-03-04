@@ -92,7 +92,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
         }
         public void Write(GeometryNode _Node)
         {
-            GeometryNodes[_Node.UniqueID] = _Node;
+            GeometryNodes.AddOrUpdate(_Node.UniqueID, _Node, (K,V) => V);
         }
         public void Write(MetadataNode _Node)
         {
@@ -159,6 +159,10 @@ namespace ServiceUtilities.Process.RandomAccessFile
                 FileTypeStreamMap[ENodeType.Hierarchy].IOStream.Flush();
                 FileTypeStreamMap[ENodeType.Metadata].IOStream.Flush();
                 FileTypeStreamMap[ENodeType.Geometry].IOStream.Flush();
+
+                FileTypeStreamMap[ENodeType.Hierarchy].IOStream.Close();
+                FileTypeStreamMap[ENodeType.Metadata].IOStream.Close();
+                FileTypeStreamMap[ENodeType.Geometry].IOStream.Close();
             }
             catch (Exception) { }
 
@@ -174,10 +178,12 @@ namespace ServiceUtilities.Process.RandomAccessFile
             if (_Stream.IOCompression == EDeflateCompression.Compress)
             {
                 WriteToStream_Compress(_Stream.IOStream, _Nodes);
+                _Stream.IOStream.Flush();
             }
             else if (_Stream.IOCompression == EDeflateCompression.DoNotCompress)
             {
                 WriteToStream_Base(_Stream.IOStream, _Nodes);
+                _Stream.IOStream.Flush();
             }
         }
 
@@ -196,6 +202,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
 
             while (_Nodes.TryDequeue(out Node Current))
             {
+
                 var Size = Current.GetSize();
 
 

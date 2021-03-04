@@ -19,7 +19,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
         private readonly GZipStream DecompressionStream;
         private readonly Stream InnerStream;
 
-        public const int MaximumChunkSize = 100000;
+        public const int MaximumChunkSize = 1000000;
 
         public XStreamReader(ENodeType _FileType, Stream _InnerStream, Action<uint> _OnFileSDKVersionRead, Action<Node> _OnNodeRead_TS, EDeflateCompression _Compression)
         {
@@ -62,6 +62,8 @@ namespace ServiceUtilities.Process.RandomAccessFile
 
                     Write(ReadChunk, 0, ReadCount);
                 }
+                bInnerStreamReadCompleted = true;
+                ThreadOperationCompletedEvent.WaitOne();
             }
             catch (Exception e)
             {
@@ -126,6 +128,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
 
         private readonly ConcurrentQueue<byte[]> UnprocessedDataQueue = new ConcurrentQueue<byte[]>();
         private long UnprocessedDataSize = 0;
+        private long UnprocessedNodes = 0;
 
         private bool bInnerStreamReadCompleted = false;
         private readonly ManualResetEvent ThreadOperationCompletedEvent = new ManualResetEvent(false);
@@ -266,7 +269,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
                     FailedLeftOverBlock = new byte[CurrentBuffer.Length - SuccessOffset];
                     Buffer.BlockCopy(CurrentBuffer, SuccessOffset, FailedLeftOverBlock, 0, FailedLeftOverBlock.Length);
                 }
-                if (bInnerStreamReadCompleted && UnprocessedDataQueue.Count == 0 && UnprocessedDataSize == 0)
+                if (bInnerStreamReadCompleted && UnprocessedDataQueue.Count == 0 && UnprocessedDataSize == 0 && UnprocessedNodes == 0)
                 {
                     try
                     {
@@ -303,10 +306,11 @@ namespace ServiceUtilities.Process.RandomAccessFile
                     }
                     throw;
                 }
-
+                Interlocked.Increment(ref UnprocessedNodes);
                 BTaskWrapper.Run(() =>
                 {
                     OnNodeRead_TS(NewNode);
+                    Interlocked.Decrement(ref UnprocessedNodes);
                 });
             }
             return -1;
