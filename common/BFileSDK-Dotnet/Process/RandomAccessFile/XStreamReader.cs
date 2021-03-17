@@ -19,7 +19,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
         private readonly GZipStream DecompressionStream;
         private readonly Stream InnerStream;
 
-        public const int MaximumChunkSize = 1024 * 128;
+        public const int MaximumChunkSize = 1000000;
 
         public XStreamReader(ENodeType _FileType, Stream _InnerStream, Action<uint> _OnFileSDKVersionRead, Action<Node> _OnNodeRead_TS, EDeflateCompression _Compression)
         {
