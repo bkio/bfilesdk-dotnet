@@ -32,9 +32,10 @@ namespace ServiceUtilities.Process.RandomAccessFile
             {
                 lock (HierarchySort_Lock)
                 {
-                    //var HierarchyNodeSize = (ulong)_Node.GetSize();
-                    //_Node.UniqueID = HierarchyCurrentGlobalIndex << 32 | HierarchyNodeSize;
-                    //HierarchyCurrentGlobalIndex += HierarchyNodeSize;
+                    var HierarchyNodeSize = (ulong)_Node.GetSize();
+                    _Node.UniqueID = HierarchyCurrentGlobalIndex;
+                    _Node.Size = HierarchyNodeSize;
+                    HierarchyCurrentGlobalIndex += HierarchyNodeSize;
                     HierarchySortedQueue.Enqueue(_Node);
                 }
             }
@@ -42,9 +43,10 @@ namespace ServiceUtilities.Process.RandomAccessFile
             {
                 lock (GeometrySort_Lock)
                 {
-                    //var GeometryNodeSize = (ulong)_Node.GetSize();
-                    //_Node.UniqueID = GeometryCurrentGlobalIndex << 32 | GeometryNodeSize;
-                    //GeometryCurrentGlobalIndex += GeometryNodeSize;
+                    var GeometryNodeSize = (ulong)_Node.GetSize();
+                    _Node.UniqueID = GeometryCurrentGlobalIndex;
+                    _Node.Size = GeometryNodeSize;
+                    GeometryCurrentGlobalIndex += GeometryNodeSize;
                     GeometrySortedQueue.Enqueue(_Node);
                 }
             }
@@ -52,9 +54,10 @@ namespace ServiceUtilities.Process.RandomAccessFile
             {
                 lock (MetadataSort_Lock)
                 {
-                    //var MetadataNodeSize = (ulong)_Node.GetSize();
-                    //_Node.UniqueID = MetadataCurrentGlobalIndex << 32 | MetadataNodeSize;
-                    //MetadataCurrentGlobalIndex += MetadataNodeSize;
+                    var MetadataNodeSize = (ulong)_Node.GetSize();
+                    _Node.UniqueID = MetadataCurrentGlobalIndex;
+                    _Node.Size = MetadataNodeSize;
+                    MetadataCurrentGlobalIndex += MetadataNodeSize;
                     MetadataSortedQueue.Enqueue(_Node);
                 }
             }
@@ -62,14 +65,17 @@ namespace ServiceUtilities.Process.RandomAccessFile
         private readonly object HierarchySort_Lock = new object();
         private readonly object GeometrySort_Lock = new object();
         private readonly object MetadataSort_Lock = new object();
-        private readonly Queue<Node> HierarchySortedQueue = new Queue<Node>();
-        private readonly Queue<Node> GeometrySortedQueue = new Queue<Node>();
-        private readonly Queue<Node> MetadataSortedQueue = new Queue<Node>();
+        private readonly ConcurrentQueue<Node> HierarchySortedQueue = new ConcurrentQueue<Node>();
+        private readonly ConcurrentQueue<Node> GeometrySortedQueue = new ConcurrentQueue<Node>();
+        private readonly ConcurrentQueue<Node> MetadataSortedQueue = new ConcurrentQueue<Node>();
         private ulong HierarchyCurrentGlobalIndex = FileHeader.HeaderSize;
         private ulong GeometryCurrentGlobalIndex = FileHeader.HeaderSize;
         private ulong MetadataCurrentGlobalIndex = FileHeader.HeaderSize;
 
         private bool bRandomAccessGranted = false;
+        private bool Writing = true;
+        private ManualResetEvent WaitFor = new ManualResetEvent(false);
+        private int Remaining = 3;
 
         public XStreamWriter(Dictionary<ENodeType, StreamStruct> _FileTypeStreamMap)
         {
@@ -79,6 +85,37 @@ namespace ServiceUtilities.Process.RandomAccessFile
                 || !FileTypeStreamMap.ContainsKey(ENodeType.Geometry)
                 || !FileTypeStreamMap.ContainsKey(ENodeType.Metadata))
                 throw new ArgumentException("Custom write order must contain all types.");
+
+            BTaskWrapper.Run(() =>
+            {
+                WriteToStreamContinuous(FileTypeStreamMap[ENodeType.Geometry], GeometrySortedQueue);
+                if (Interlocked.Decrement(ref Remaining) == 0)
+                {
+                    try
+                    {
+                        WaitFor.Set();
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            });
+            BTaskWrapper.Run(() =>
+            {
+                WriteToStreamContinuous(FileTypeStreamMap[ENodeType.Metadata], MetadataSortedQueue);
+                if (Interlocked.Decrement(ref Remaining) == 0)
+                {
+                    try
+                    {
+                        WaitFor.Set();
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            });
         }
 
         public void Write(HierarchyNode _Node)
@@ -92,23 +129,28 @@ namespace ServiceUtilities.Process.RandomAccessFile
         }
         public void Write(GeometryNode _Node)
         {
-            GeometryNodes.AddOrUpdate(_Node.UniqueID, _Node, (K,V) => V);
+            //GeometryNodes.AddOrUpdate(_Node.UniqueID, _Node, (K,V) => V);
+            ulong OldId = _Node.UniqueID;
+            AddToSortQueue(_Node);
+            GeometryIDReplacements[OldId] = _Node.UniqueID;
+            
         }
         public void Write(MetadataNode _Node)
         {
-            MetadataNodes[_Node.UniqueID] = _Node;
+            //MetadataNodes[_Node.UniqueID] = _Node;
+            ulong OldId = _Node.UniqueID;
+            AddToSortQueue(_Node);
+            MetadataIDReplacements[OldId] = _Node.UniqueID;
         }
 
         public void Dispose()
         {
             GrantRandomAccess();
 
-            var WaitFor = new ManualResetEvent(false);
-            int Remaining = 3;
-
             BTaskWrapper.Run(() =>
             {
                 WriteToStream(FileTypeStreamMap[ENodeType.Hierarchy], HierarchySortedQueue);
+                Writing = false;
                 if (Interlocked.Decrement(ref Remaining) == 0)
                 {
                     try
@@ -121,36 +163,7 @@ namespace ServiceUtilities.Process.RandomAccessFile
                     }
                 }
             });
-            BTaskWrapper.Run(() =>
-            {
-                WriteToStream(FileTypeStreamMap[ENodeType.Geometry], GeometrySortedQueue);
-                if (Interlocked.Decrement(ref Remaining) == 0)
-                {
-                    try
-                    {
-                        WaitFor.Set();
-                    }
-                    catch (Exception)
-                    {
 
-                    }
-                }
-            });
-            BTaskWrapper.Run(() =>
-            {
-                WriteToStream(FileTypeStreamMap[ENodeType.Metadata], MetadataSortedQueue);
-                if (Interlocked.Decrement(ref Remaining) == 0)
-                {
-                    try
-                    {
-                        WaitFor.Set();
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
-            });
 
             try
             {
@@ -173,7 +186,55 @@ namespace ServiceUtilities.Process.RandomAccessFile
             catch (Exception) { }
         }
 
-        private void WriteToStream(StreamStruct _Stream, Queue<Node> _Nodes)
+        private void WriteToStreamContinuous(StreamStruct _Stream, ConcurrentQueue<Node> _Nodes)
+        {
+            if (_Stream.IOCompression == EDeflateCompression.Compress)
+            {
+                WriteToStreamContinuous_Compress(_Stream.IOStream, _Nodes);
+                _Stream.IOStream.Flush();
+            }
+            else if (_Stream.IOCompression == EDeflateCompression.DoNotCompress)
+            {
+                WriteToStreamContinuous_Base(_Stream.IOStream, _Nodes);
+                _Stream.IOStream.Flush();
+            }
+        }
+
+        private void WriteToStreamContinuous_Compress(Stream _Stream, ConcurrentQueue<Node> _Nodes)
+        {
+            using (var CompressionStream = new GZipStream(_Stream, CompressionLevel.Optimal))
+            {
+                WriteToStreamContinuous_Base(CompressionStream, _Nodes);
+            }
+        }
+
+        private void WriteToStreamContinuous_Base(Stream _Stream, ConcurrentQueue<Node> _Nodes)
+        {
+            var Buffer = new byte[FileHeader.HeaderSize];
+            var Head = FileHeader.WriteHeader(FileSDKVersion, Buffer);
+            _Stream.Write(Buffer, 0, FileHeader.HeaderSize);
+
+            while (Writing || _Nodes.Count > 0)
+            {
+                if (_Nodes.TryDequeue(out Node Current))
+                {
+                    var Size = Current.GetSize();
+
+
+                    Buffer = new byte[Size];
+                    Current.ToBytes(Buffer, 0);
+
+                    _Stream.Write(Buffer, 0, Size);
+                    Head += Size;
+                }
+                else
+                {
+                    Thread.Sleep(10);
+                }
+            }
+        }
+
+        private void WriteToStream(StreamStruct _Stream, ConcurrentQueue<Node> _Nodes)
         {
             if (_Stream.IOCompression == EDeflateCompression.Compress)
             {
@@ -187,14 +248,15 @@ namespace ServiceUtilities.Process.RandomAccessFile
             }
         }
 
-        private void WriteToStream_Compress(Stream _Stream, Queue<Node> _Nodes)
+        private void WriteToStream_Compress(Stream _Stream, ConcurrentQueue<Node> _Nodes)
         {
             using (var CompressionStream = new GZipStream(_Stream, CompressionLevel.Optimal))
             {
                 WriteToStream_Base(CompressionStream, _Nodes);
             }
         }
-        private void WriteToStream_Base(Stream _Stream, Queue<Node> _Nodes)
+
+        private void WriteToStream_Base(Stream _Stream, ConcurrentQueue<Node> _Nodes)
         {
             var Buffer = new byte[FileHeader.HeaderSize];
             var Head = FileHeader.WriteHeader(FileSDKVersion, Buffer);
@@ -271,20 +333,16 @@ namespace ServiceUtilities.Process.RandomAccessFile
                 bool bSuccess = true;
                 do
                 {
-                    if (bSuccess/*If this is first try*/ && GeometryNodes.TryRemove(_Node.GeometryParts[i].GeometryID, out Node GNode))
-                    {
-                        var OldGeometryNodeID = GNode.UniqueID;
-
-                        AddToSortQueue(GNode);
-                        _Node.GeometryParts[i].GeometryID = GNode.UniqueID;
-                        GeometryIDReplacements[OldGeometryNodeID] = GNode.UniqueID;
-                    }
-                    else if (PowerNap(bSuccess) && GeometryIDReplacements.TryGetValue(_Node.GeometryParts[i].GeometryID, out ulong NewID))
+                    if (bSuccess/*If this is first try*/ && GeometryIDReplacements.TryGetValue(_Node.GeometryParts[i].GeometryID, out ulong NewID))
                     {
                         _Node.GeometryParts[i].GeometryID = NewID;
                         bSuccess = true;
                     }
-                    else bSuccess = false;
+                    else
+                    {
+                        PowerNap(bSuccess);
+                        bSuccess = false;
+                    }
                 } while (!bSuccess);
             }
 
@@ -292,20 +350,17 @@ namespace ServiceUtilities.Process.RandomAccessFile
                 bool bSuccess = true;
                 do
                 {
-                    if (bSuccess/*If this is first try*/ && MetadataNodes.TryRemove(_Node.MetadataID, out Node MNode))
-                    {
-                        var OldMetadataNodeID = MNode.UniqueID;
-
-                        AddToSortQueue(MNode);
-                        _Node.MetadataID = MNode.UniqueID;
-                        MetadataIDReplacements[OldMetadataNodeID] = MNode.UniqueID;
-                    }
-                    else if (PowerNap(bSuccess) && MetadataIDReplacements.TryGetValue(_Node.MetadataID, out ulong NewID))
+                    if (bSuccess/*If this is first try*/ && MetadataIDReplacements.TryGetValue(_Node.MetadataID, out ulong NewID))
                     {
                         _Node.MetadataID = NewID;
                         bSuccess = true;
                     }
-                    else bSuccess = false;
+                    else
+                    {
+                        PowerNap(bSuccess);
+                        bSuccess = false;
+                    }
+                    
                 } while (!bSuccess);
             }
 
