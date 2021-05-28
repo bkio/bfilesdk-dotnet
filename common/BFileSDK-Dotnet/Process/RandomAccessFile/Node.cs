@@ -15,11 +15,14 @@ namespace ServiceUtilities.Process.RandomAccessFile
     public abstract class Node
     {
         public const string ID_PROPERTY = "id";
+        public const string SIZE_PROPERTY = "size";
 
         public const ulong UNDEFINED_ID = 0xFFFFFFFF00000000;
 
         [JsonProperty(ID_PROPERTY)]
         public ulong UniqueID = UNDEFINED_ID;
+        [JsonProperty(SIZE_PROPERTY)]
+        public ulong Size = 0;
 
         public abstract ENodeType GetNodeType();
 
@@ -41,12 +44,14 @@ namespace ServiceUtilities.Process.RandomAccessFile
         {
             int Head = _Head;
             Convert.ValueToBytes(BitConverter.GetBytes(UniqueID), _WriteToBytes, ref Head);
+            //Convert.ValueToBytes(BitConverter.GetBytes(Size), _WriteToBytes, ref Head);
             return Head - _Head;
         }
         public virtual int FromBytes(byte[] _FromBytes, int _Head)
         {
             int Head = _Head;
             Convert.BytesToValue(out UniqueID, _FromBytes, ref Head);
+            //Convert.BytesToValue(out Size, _FromBytes, ref Head);
             return Head - _Head;
         }
     };
