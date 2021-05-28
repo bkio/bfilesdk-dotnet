@@ -59,7 +59,13 @@ namespace ServiceUtilities.Process.Procedure
             ["hgm"] = EProcessedFileType.UNREAL_HGM,
             ["hg"] = EProcessedFileType.UNREAL_HG,
             ["h"] = EProcessedFileType.UNREAL_H,
-            ["gs"] = EProcessedFileType.UNREAL_G
+            ["gs"] = EProcessedFileType.UNREAL_G,
+            ["2"] = EProcessedFileType.NONE_OR_RAW,
+            ["3"] = EProcessedFileType.NONE_OR_RAW,
+            ["4"] = EProcessedFileType.NONE_OR_RAW,
+            ["5"] = EProcessedFileType.NONE_OR_RAW,
+            ["6"] = EProcessedFileType.NONE_OR_RAW,
+            ["7"] = EProcessedFileType.NONE_OR_RAW
         };
 
         public static readonly Dictionary<EProcessedFileType, string> ProcessedFileType_FolderPrefix_Map = new Dictionary<EProcessedFileType, string>()
