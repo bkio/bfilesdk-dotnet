@@ -60,6 +60,7 @@ namespace ServiceUtilities.Process.Procedure
             ["hg"] = EProcessedFileType.UNREAL_HG,
             ["h"] = EProcessedFileType.UNREAL_H,
             ["gs"] = EProcessedFileType.UNREAL_G,
+            ["1"] = EProcessedFileType.NONE_OR_RAW,
             ["2"] = EProcessedFileType.NONE_OR_RAW,
             ["3"] = EProcessedFileType.NONE_OR_RAW,
             ["4"] = EProcessedFileType.NONE_OR_RAW,
